@@ -2,20 +2,26 @@ import argparse
 import torch
 import torch.nn.parallel
 
+import sys
+sys.path.append('./models')
+
 from models import modules, net, resnet, densenet, senet
 import numpy as np
 import loaddata_demo as loaddata
 import pdb
 
 import matplotlib.image
-import matplotlib.pyplot as plt
-plt.set_cmap("jet")
+
+import time
+# import matplotlib.pyplot as plt
+# plt.set_cmap("jet")
+
 
 
 def define_model(is_resnet, is_densenet, is_senet):
     if is_resnet:
         original_model = resnet.resnet50(pretrained = True)
-        Encoder = modules.E_resnet(original_model) 
+        Encoder = modules.E_resnet(original_model)
         model = net.model(Encoder, num_features=2048, block_channel = [256, 512, 1024, 2048])
     if is_densenet:
         original_model = densenet.densenet161(pretrained=True)
@@ -35,17 +41,22 @@ def main():
     model.load_state_dict(torch.load('./pretrained_model/model_senet'))
     model.eval()
 
-    nyu2_loader = loaddata.readNyu2('data/demo/img_nyu2.png')
+    nyu2_loader = loaddata.readNyu2('data/images.png')
   
     test(nyu2_loader, model)
 
 
 def test(nyu2_loader, model):
     for i, image in enumerate(nyu2_loader):     
-        image = torch.autograd.Variable(image, volatile=True).cuda()
+        # image = torch.autograd.Variable(image, volatile=True).cuda()
+        start = time.time()
         out = model(image)
+        print(time.time()-start)
         
-        matplotlib.image.imsave('data/demo/out.png', out.view(out.size(2),out.size(3)).data.cpu().numpy())
+        matplotlib.image.imsave('data/out.png', out.view(out.size(2),out.size(3)).data.cpu().numpy())
+
 
 if __name__ == '__main__':
+    start = time.time()
     main()
+    print(time.time()-start)
